@@ -1,7 +1,9 @@
 package value
 
-import context._
-case class Chars(value:String) extends Addable with Ordered[Value]{
+import context.*
+import expression.Literal
+
+case class Chars(value:String) extends Addable with Ordered[Value] with Literal{
   def size():Exact ={
     Exact(value.length)
   }

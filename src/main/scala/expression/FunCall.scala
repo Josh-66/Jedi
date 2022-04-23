@@ -1,8 +1,8 @@
 package expression
 import value._
 import context._
-class FunCall(identifier:Identifier,args:List[Value]) extends Expression{
-  def execute(env:Environment): Unit ={
-    alu.execute(identifier,args)
+case class FunCall(identifier:Identifier,args:List[Expression]) extends Expression{
+  override def execute(env:Environment): Value ={
+    alu.execute(identifier,args.map(_.execute(env)))
   }
 }

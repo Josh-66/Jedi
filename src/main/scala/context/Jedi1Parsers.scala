@@ -1,9 +1,10 @@
 package context
 
-import scala.util.parsing.combinator._
-import expression._
-import value._
-import scala.collection.immutable.List.cons
+import scala.util.parsing.combinator.*
+import expression.*
+import value.*
+
+import scala.::
 /*
  * Notes:
  * disjunction reduces to conjunction reduces to equality ... reduces to term
@@ -33,21 +34,21 @@ class Jedi1Parsers extends RegexParsers {
 
   // conjunction ::= equality ~ ("&&" ~ equality)*
   def  conjunction: Parser[Expression] = equality ~ rep("&&" ~> equality) ^^ {
-    case dis ~ Nil => dis
-    case dis ~ more => Conjunction(dis::more)
+    case equ ~ Nil => equ
+    case equ ~ more => Conjunction(equ :: more)
   }
   // equality ::= inequality ~ ("==" ~ inequality)?
   def  equality: Parser[Expression] = inequality ~ rep("==" ~> inequality) ^^ {
-    case equ ~ Nil => equ
-    case equ ~ Some(more) => FunCall(Identifier("equals"), equ :: more)
+    case ine ~ Nil => ine
+    case ine ~ more => FunCall(Identifier("equals"), ine :: more)
   }
 
   // inequality ::= sum ~ (("<" | ">" | "!=") ~ sum)?
   def inequality: Parser[Expression] = sum ~ opt(("<" | ">" | "!=") ~ sum) ^^ {
-    case ine ~ Nil => ine
-    case ine ~ Some("<" ~ b) => FunCall(Identifier("less"),ine :: b)
-    case ine ~ Some(">" ~ b) => FunCall(Identifier("more"),ine :: b)
-    case ine ~ Some("!=" ~ b) => FunCall(Identifier("unequals"),ine :: b)
+    case sum ~ None => sum
+    case sum ~ Some("<" ~ b) =>  FunCall(Identifier("less"),List(sum,b))
+    case sum ~ Some(">" ~ b) =>  FunCall(Identifier("more"),List(sum,b))
+    case sum ~ Some("!=" ~ b) => FunCall(Identifier("unequals"),List(sum,b))
   }
 
   // sum ::= product ~ ("+" | "-") ~ product)*
@@ -58,11 +59,12 @@ class Jedi1Parsers extends RegexParsers {
   // use tail recursion to imitate left reduce
   // parses a - b + c into add(sub(a, b), c)
   private def parseSums(result: Expression, unseen: List[String ~ Expression]): Expression = {
-    def combiner(exp: Expression, next: String~Expression) =
+    def combiner(exp: Expression, next: String~Expression) = {
       next match {
         case "+" ~ p => FunCall(Identifier("add"), List(exp, p))
         case "-" ~ p => FunCall(Identifier("sub"), List(exp, p))
       }
+    }
     if (unseen == Nil) result
     else parseSums(combiner(result, unseen.head), unseen.tail)
   }
@@ -72,20 +74,20 @@ class Jedi1Parsers extends RegexParsers {
     case p ~ more => parseProds(p, more)
   }
   private def parseProds(result: Expression, unseen: List[String ~ Expression]): Expression = {
-    def combiner(exp: Expression, next: String~Expression) =
+    def combiner(exp: Expression, next: String~Expression) = {
       next match {
         case "*" ~ p => FunCall(Identifier("mul"), List(exp, p))
         case "/" ~ p => FunCall(Identifier("div"), List(exp, p))
       }
+    }
+
     if (unseen == Nil) result
     else parseProds(combiner(result, unseen.head), unseen.tail)
   }
 
-  def term: Parser[Expression]  = funCall | literal | "("~>expression<~")" ^^ {
-    case t => t
-  }
+  def term: Parser[Expression]  = funCall | literal | "("~>expression<~")"
 
-  def literal = boole | inexact | exact | chars | identifier
+  def literal: Parser[Expression] = boole | inexact | exact | chars | identifier
 
   // chars ::= any characters bracketed by quotes
   def chars: Parser[Chars] = """\"[^"]+\"""".r ^^ {
@@ -114,7 +116,7 @@ class Jedi1Parsers extends RegexParsers {
     case id ~ op => FunCall(id,op)
   }
   // operands ::= "(" ~ (expression ~ ("," ~ expression)*)? ~ ")"
-  def operands: Parser[List[Expression]] = "(" ~> (expression ~ opt(rep("," ~> expression)) <~ ")" ^^{
+  def operands: Parser[List[Expression]] = "(" ~> expression ~ opt(rep("," ~> expression)) <~ ")" ^^{
     case exp ~ None => List(exp)
     case exp ~ Some(expL) => exp::expL
   }

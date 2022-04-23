@@ -1,8 +1,9 @@
 package value
 
-import context._
+import context.*
+import expression.Literal
 
-case class Exact(value: Int) extends Numeric with Ordered[Value] :
+case class Exact(value: Int) extends Numeric with Ordered[Value] with Literal :
 
   def +(other: Value): Addable =
     other match

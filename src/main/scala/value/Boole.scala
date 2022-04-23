@@ -1,8 +1,9 @@
 package value
 
-import context._
+import context.*
+import expression.Literal
 
-case class Boole(value: Boolean) extends Value{
+case class Boole(value: Boolean) extends Literal{
   def &&(other:Value):Boole= {
     other match{
       case x:Boole => Boole(value && x.value)

@@ -26,7 +26,7 @@ object console {
     }
   }
 
-  private def executeFile(fileName: String) {
+  private def executeFile(fileName: String) ={
 
     var more = true
 
@@ -70,7 +70,7 @@ object console {
 
 
   // read-execute-print loop
-  def repl {
+  def repl ={
     var more = true
     var cmmd = ""
     while(more) {
@@ -89,15 +89,15 @@ object console {
           println("token = " + e.result.next.first)
         }
         case e: UndefinedException => {
-          println(e.gripe)
+          println(e.getMessage)
           if (verbose) e.printStackTrace()
         }
         case e: TypeException => {
-          println(e.gripe)
+          println(e.getMessage)
           if (verbose) e.printStackTrace()
         }
         case e: JediException => {
-          println(e.gripe)
+          println(e.getMessage)
           if (verbose) e.printStackTrace()
         }
         case e: Exception => {
@@ -117,6 +117,7 @@ object console {
     else
       try {
         executeFile(args(0))
+        repl
       } catch  {
         case e: Exception => {
           println(e)
