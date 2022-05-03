@@ -19,6 +19,9 @@ object alu:
       case "unequals" => unequals(args)  // binary
       case "not" => not(args)            // unary
       case "write" => write(args)
+      // variables
+      case "dereference" => dereference(args)
+      case "var" => makeVar(args)
   // TBC
 
 
@@ -108,7 +111,19 @@ object alu:
     println(args(0))
     Notification.DONE
 
-
+  private def dereference(args: List[Value]): Value ={
+    if (args.length!=1)
+      throw new TypeException("Needs one argument for dereference")
+    args(0) match {
+      case v:Variable => v.value
+      case _ => throw TypeException("Only Variables can be dereferenced")
+    }
+  }
+  private def makeVar(args: List[Value]): Value ={
+    if (args.length!=1)
+      throw new TypeException("Needs one argument for makeVar")
+    Variable(args(0))
+  }
 
 
 // etc.

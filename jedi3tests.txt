@@ -1,0 +1,17 @@
+def count = var(0)
+count
+[count]
+
+def incCount = lambda() count := [count] + 1
+
+incCount()
+incCount()
+count
+
+while ([count] < 10) { write("calling incCount"); incCount() }
+count
+
+def tri = lambda (n) { def result = var(0); def count = var(0); while([count] < n + 1) { result := [result] + [count]; count := [count] + 1}; [result]}
+
+tri(5)
+tri(6)
